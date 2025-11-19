@@ -1,0 +1,98 @@
+"""
+🚀 GUÍA DE INICIO RÁPIDO
+========================
+
+PASO 1: Instalar dependencias
+------------------------------
+Abre PowerShell en esta carpeta y ejecuta:
+
+    pip install -r requirements.txt
+
+Esto instalará: numpy y matplotlib
+
+
+PASO 2: Ejecutar el programa
+-----------------------------
+En PowerShell:
+
+    python mian.py
+
+
+PASO 3: Elegir opción
+----------------------
+Al iniciar verás:
+
+    📝 OPCIONES DE INGRESO:
+      1. Ingresar problema manualmente
+      2. Usar problema de ejemplo (2 o 3 variables aleatorio)
+      3. Salir
+
+    Seleccione una opción (1-3):
+
+
+OPCIÓN RECOMENDADA PARA PRIMERA VEZ: 2
+---------------------------------------
+Selecciona la opción 2 para ver un ejemplo automático.
+Presiona ENTER para avanzar en cada iteración.
+
+
+EJEMPLO DE USO MANUAL (Opción 1)
+---------------------------------
+Si eliges opción 1, ingresa:
+
+¿Desea MAXIMIZAR o MINIMIZAR? (max/min): max
+¿Cuántas variables tiene el problema? (2 o 3 recomendado): 2
+Coeficientes (x1 x2): 3 5
+¿Cuántas restricciones tiene el problema? 3
+Restricción 1: 1 0 <= 4
+Restricción 2: 0 2 <= 12
+Restricción 3: 3 2 <= 18
+
+
+QUÉ ESPERAR
+-----------
+✅ El programa mostrará:
+   - Validación de factibilidad
+   - Cada iteración del tablero simplex revisado
+   - Variable entrante y saliente en cada paso
+   - Solución óptima final
+   - Opción de ver gráfica (solo 2D)
+   - Opción de guardar resultado
+
+
+ARCHIVOS GENERADOS
+-------------------
+- resultado_pl.txt: Texto con la solución completa
+- solucion_grafica_pl.png: Gráfica de la solución (solo 2D)
+
+
+RECURSOS ADICIONALES
+--------------------
+📖 README.md: Documentación completa
+🧪 ejemplos_casos_prueba.py: Casos de prueba con soluciones esperadas
+
+
+SOLUCIÓN DE PROBLEMAS
+----------------------
+❌ Error: "No module named 'numpy'"
+   Solución: pip install numpy matplotlib
+
+❌ Error al ejecutar
+   Solución: Verifica que estés usando Python 3.7 o superior
+   python --version
+
+
+CARACTERÍSTICAS DESTACADAS
+---------------------------
+✨ Muestra cada iteración del tablero simplex revisado
+✨ Formato estándar: [1 | C_B*B⁻¹*A-C | C_B*B⁻¹ | C_B*B⁻¹*b]
+✨ Identifica variables entrantes y salientes
+✨ Calcula variables duales (precios sombra)
+✨ Gráfica 2D con región factible
+✨ Valida factibilidad, no acotamiento e infactibilidad
+✨ Guarda resultados en archivos
+
+
+¡DISFRUTA RESOLVIENDO PROBLEMAS DE PROGRAMACIÓN LINEAL!
+========================================================
+"""
