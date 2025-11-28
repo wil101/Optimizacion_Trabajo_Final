@@ -74,13 +74,15 @@ def mostrar_tablero_revisado(iteracion, base, B_inv, A, c_B, c, x_B, Z, n,
     mostrar_caja(f"TABLERO SIMPLEX REVISADO - ITERACIÓN {iteracion}")
     
     # Encabezados
-    headers = ['Z'] + [obtener_nombre_variable(i, n) for i in range(total_vars)] + \
-              ['π'] + ['LD']
+    headers = ['Z'] + [obtener_nombre_variable(i, n) for i in range(total_vars)] + ['π'] + ['LD']
     
     # Calcular B_inv * A
     B_inv_A = B_inv @ A
     
-    # Primera fila: [ 1 | C_B * B⁻¹ * A - C | C_B * B⁻¹ | C_B * B⁻¹ * b ]
+    # Calcular variables duales π una sola vez
+    pi = c_B @ B_inv
+    
+    # Primera fila: [ 1 | C_B * B⁻¹ * A - C | π | Z ]
     fila_Z = [1.0]
     
     # C_B * B⁻¹ * A - C para cada variable
@@ -88,33 +90,46 @@ def mostrar_tablero_revisado(iteracion, base, B_inv, A, c_B, c, x_B, Z, n,
         valor = c_B @ (B_inv @ A[:, j]) - c[j]
         fila_Z.append(-valor)
     
-    # C_B * B⁻¹ (variables duales π)
-    pi = c_B @ B_inv
-    fila_Z.extend(pi)
+    # Agregar 0 para la columna π en la fila Z (no aplica para Z)
+    fila_Z.append(0.0)
     
     # C_B * B⁻¹ * b (valor de Z)
     fila_Z.append(Z)
     
-    # Filas de restricciones: [ 0 | B⁻¹ * A | B⁻¹ | B⁻¹ * b ]
+    # Filas de restricciones: [ 0 | B⁻¹ * A | valores de π para esta fila | valor de x_B ]
     filas_rest = []
     for i in range(m):
         fila = [0.0]
         fila.extend(B_inv_A[i, :])
-        fila.extend(B_inv[i, :])
+        fila.append(pi[i])  # Solo el precio sombra para esta restricción
         fila.append(x_B[i])
         filas_rest.append(fila)
     
     # Construir tabla con formato y colores
     print("  Var. Base │ ", end="")
-    for h in headers:
-        print(f"{h:>8}", end=" ")
+    for j, h in enumerate(headers):
+        # Colorear encabezado de variable entrante en azul
+        if var_entrante is not None and j > 0 and j-1 == var_entrante:
+            h_coloreado = Colores.azul(h)
+            espacios_extra = len(h_coloreado) - len(h)
+            print(f"{h_coloreado:>{8+espacios_extra}}", end=" ")
+        else:
+            print(f"{h:>8}", end=" ")
     print()
     print("  " + "─"*10 + "┼" + "─"*(9 * len(headers)))
     
     # Fila Z
     print(f"  {'Z':^10}│ ", end="")
-    for val in fila_Z:
-        print(f"{formatear_numero(val):>8}", end=" ")
+    for j, val in enumerate(fila_Z):
+        val_formateado = formatear_numero(val)
+        # Colorear columna de variable entrante en azul
+        # var_entrante está en posición var_entrante+1 en fila_Z
+        if var_entrante is not None and j == var_entrante + 1:
+            val_coloreado = Colores.azul(val_formateado)
+            espacios_extra = len(val_coloreado) - len(val_formateado)
+            print(f"{val_coloreado:>{8+espacios_extra}}", end=" ")
+        else:
+            print(f"{val_formateado:>8}", end=" ")
     print()
     
     # Filas de restricciones con colores
@@ -137,8 +152,24 @@ def mostrar_tablero_revisado(iteracion, base, B_inv, A, c_B, c, x_B, Z, n,
         else:
             print(f"  {var_base_mostrar:^10}│ ", end="")
         
-        for val in fila:
-            print(f"{formatear_numero(val):>8}", end=" ")
+        # Colorear toda la fila si es la variable saliente, o columna si es entrante
+        if var_saliente is not None and base[i] == var_saliente:
+            for val in fila:
+                val_formateado = formatear_numero(val)
+                val_coloreado = Colores.rojo(val_formateado)
+                espacios_extra = len(val_coloreado) - len(val_formateado)
+                print(f"{val_coloreado:>{8+espacios_extra}}", end=" ")
+        else:
+            for j, val in enumerate(fila):
+                val_formateado = formatear_numero(val)
+                # Columna entrante: j-1 porque fila empieza con 0.0 en posición 0
+                # La variable entrante está en posición var_entrante+1
+                if var_entrante is not None and j == var_entrante + 1:
+                    val_coloreado = Colores.azul(val_formateado)
+                    espacios_extra = len(val_coloreado) - len(val_formateado)
+                    print(f"{val_coloreado:>{8+espacios_extra}}", end=" ")
+                else:
+                    print(f"{val_formateado:>8}", end=" ")
         print()
     
     print("\n  Leyenda:")
@@ -241,15 +272,15 @@ def resolver_simplex_revisado(c_original, A, b, tipo, n):
             if j not in base:
                 costos_reducidos[j] = c_extended[j] - c_B @ (B_inv @ A_extended[:, j])
         
-        # Mostrar tablero (sin variables entrante/saliente aún)
-        mostrar_tablero_revisado(iteracion, base, B_inv, A_extended, 
-                                c_B, c_extended, x_B, Z, n)
-        
         # Test de optimalidad
         if np.all(costos_reducidos <= 1e-9):
             print("\n" + "="*80)
             print("  ✅ ¡SOLUCIÓN ÓPTIMA ENCONTRADA!")
             print("="*80)
+            
+            # Mostrar tablero final (sin variable entrante/saliente)
+            mostrar_tablero_revisado(iteracion, base, B_inv, A_extended, 
+                                    c_B, c_extended, x_B, Z, n)
             
             # Guardar solución
             solucion = np.zeros(n + m)
@@ -278,11 +309,6 @@ def resolver_simplex_revisado(c_original, A, b, tipo, n):
             }
         
         var_entrante = idx_entrante
-        nombre_entrante = obtener_nombre_variable(var_entrante, n)
-        
-        print(f"\n🔵 Variable entrante: " + Colores.azul(nombre_entrante) + 
-              f" (columna {var_entrante})")
-        print(f"   Costo reducido: {formatear_numero(costos_reducidos[var_entrante])}")
         
         # Calcular dirección
         y = B_inv @ A_extended[:, var_entrante]
@@ -312,7 +338,17 @@ def resolver_simplex_revisado(c_original, A, b, tipo, n):
             return {'estado': 'no_acotado'}
         
         var_saliente = base[idx_saliente]
+        
+        # Mostrar tablero CON variables entrante y saliente coloreadas
+        mostrar_tablero_revisado(iteracion, base, B_inv, A_extended, 
+                                c_B, c_extended, x_B, Z, n, var_entrante, var_saliente)
+        
+        nombre_entrante = obtener_nombre_variable(var_entrante, n)
         nombre_saliente = obtener_nombre_variable(var_saliente, n)
+        
+        print(f"\n🔵 Variable entrante: " + Colores.azul(nombre_entrante) + 
+              f" (columna {var_entrante})")
+        print(f"   Costo reducido: {formatear_numero(costos_reducidos[var_entrante])}")
         
         print(f"🔴 Variable saliente: " + Colores.rojo(nombre_saliente) + 
               f" (posición {idx_saliente} en base)")
