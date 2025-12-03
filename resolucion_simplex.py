@@ -154,12 +154,21 @@ def mostrar_tablero_revisado(iteracion, base, B_inv, A, c_B, c, x_B, Z, n,
         
         # Colorear toda la fila si es la variable saliente, o columna si es entrante
         if var_saliente is not None and base[i] == var_saliente:
-            for val in fila:
+            # Esta es la fila saliente - pintar en rojo, excepto intersección
+            for j, val in enumerate(fila):
                 val_formateado = formatear_numero(val)
-                val_coloreado = Colores.rojo(val_formateado)
-                espacios_extra = len(val_coloreado) - len(val_formateado)
-                print(f"{val_coloreado:>{8+espacios_extra}}", end=" ")
+                # Si también es la columna entrante, pintar en morado (intersección)
+                if var_entrante is not None and j == var_entrante + 1:
+                    val_coloreado = Colores.morado(val_formateado)
+                    espacios_extra = len(val_coloreado) - len(val_formateado)
+                    print(f"{val_coloreado:>{8+espacios_extra}}", end=" ")
+                else:
+                    # Resto de la fila en rojo
+                    val_coloreado = Colores.rojo(val_formateado)
+                    espacios_extra = len(val_coloreado) - len(val_formateado)
+                    print(f"{val_coloreado:>{8+espacios_extra}}", end=" ")
         else:
+            # No es fila saliente - revisar si hay columnas entrantes
             for j, val in enumerate(fila):
                 val_formateado = formatear_numero(val)
                 # Columna entrante: j-1 porque fila empieza con 0.0 en posición 0
@@ -275,7 +284,7 @@ def resolver_simplex_revisado(c_original, A, b, tipo, n):
         # Test de optimalidad
         if np.all(costos_reducidos <= 1e-9):
             print("\n" + "="*80)
-            print("  ✅ ¡SOLUCIÓN ÓPTIMA ENCONTRADA!")
+            print("  ✅ \033[1;30;42m ¡SOLUCIÓN ÓPTIMA ENCONTRADA!\033[0m")
             print("="*80)
             
             # Mostrar tablero final (sin variable entrante/saliente)
@@ -388,7 +397,7 @@ def mostrar_solucion_final(solucion, valor, tipo, nombres_vars):
         tipo: 'max' o 'min'
         nombres_vars: Lista de nombres de variables
     """
-    mostrar_caja("SOLUCIÓN ÓPTIMA")
+    mostrar_caja("\033[1;30;42mSOLUCIÓN ÓPTIMA\033[0m")
     
     print("  Variables de decisión:")
     for i, nombre in enumerate(nombres_vars):

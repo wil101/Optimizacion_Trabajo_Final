@@ -45,6 +45,11 @@ class Colores:
         return f"{Colores.AMARILLO}{texto}{Colores.RESET}"
     
     @staticmethod
+    def morado(texto):
+        """Retorna texto en morado/magenta."""
+        return f"{Colores.MAGENTA}{texto}{Colores.RESET}"
+    
+    @staticmethod
     def negrita(texto):
         """Retorna texto en negrita."""
         return f"{Colores.NEGRITA}{texto}{Colores.RESET}"

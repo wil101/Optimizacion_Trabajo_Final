@@ -14,7 +14,7 @@ from manejo_consola import (
     mostrar_menu_principal,
     ingresar_problema_completo,
     generar_problema_ejemplo_2d,
-    generar_problema_ejemplo_3d,
+    #generar_problema_ejemplo_3d,
     confirmar_accion
 )
 from resolucion_simplex import (
@@ -342,13 +342,13 @@ def main():
         pl.cargar_datos(datos)
         
     elif opcion == '2':
-        mostrar_titulo("GENERANDO PROBLEMA DE EJEMPLO")
-        num_vars = random.choice([2, 3])
+        #mostrar_titulo("GENERANDO PROBLEMA DE EJEMPLO")
+        #num_vars = random.choice([2, 3])
         
-        if num_vars == 2:
-            datos = generar_problema_ejemplo_2d()
-        else:
-            datos = generar_problema_ejemplo_3d()
+        #if num_vars == 2:
+        datos = generar_problema_ejemplo_2d()
+        #else:
+        #    datos = generar_problema_ejemplo_3d()
         
         pl.cargar_datos(datos)
     

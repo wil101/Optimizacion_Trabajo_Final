@@ -170,11 +170,44 @@ def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricci
     
     fig, ax = plt.subplots(figsize=(10, 8))
     
-    # Rango de graficación
-    x_max = max(10, b.max() * 1.5)
-    y_max = max(10, b.max() * 1.5)
+    # Encontrar vértices primero para calcular límites centrados
+    vertices = encontrar_vertices_region_factible(A, b, num_restricciones)
     
-    x = np.linspace(0, x_max, 400)
+    # Calcular límites basados en vértices y solución óptima
+    if len(vertices) > 0:
+        x_coords = [v[0] for v in vertices]
+        y_coords = [v[1] for v in vertices]
+        
+        # Incluir solución óptima en el cálculo
+        if solucion is not None:
+            x_coords.append(solucion[0])
+            y_coords.append(solucion[1])
+        
+        x_min_data = min(x_coords)
+        x_max_data = max(x_coords)
+        y_min_data = min(y_coords)
+        y_max_data = max(y_coords)
+        
+        # Agregar margen del 20% para mejor visualización
+        x_margin = (x_max_data - x_min_data) * 0.2
+        y_margin = (y_max_data - y_min_data) * 0.2
+        
+        # Asegurar márgenes mínimos
+        x_margin = max(x_margin, 1.0)
+        y_margin = max(y_margin, 1.0)
+        
+        x_max = x_max_data + x_margin
+        y_max = y_max_data + y_margin
+        x_min = max(0, x_min_data - x_margin * 0.3)  # Pequeño margen izquierdo
+        y_min = max(0, y_min_data - y_margin * 0.3)  # Pequeño margen inferior
+    else:
+        # Si no hay vértices, usar valores por defecto
+        x_max = max(10, b.max() * 1.5)
+        y_max = max(10, b.max() * 1.5)
+        x_min = 0
+        y_min = 0
+    
+    x = np.linspace(x_min, x_max, 400)
     
     # Colores para restricciones
     colores = ['red', 'blue', 'green', 'orange', 'purple', 'brown']
@@ -198,19 +231,16 @@ def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricci
                       color=colores[i % len(colores)], linewidth=2)
     
     # Encontrar y dibujar región factible
-    vertices = encontrar_vertices_region_factible(A, b, num_restricciones)
+    vertices = ordenar_vertices(vertices)
     
-    if len(vertices) > 0:
-        vertices = ordenar_vertices(vertices)
-        
-        if len(vertices) >= 3:
-            poly = Polygon(vertices, alpha=0.3, facecolor='yellow', 
-                         edgecolor='black', linewidth=2, label='Región Factible')
-            ax.add_patch(poly)
-        
-        # Marcar vértices
-        for v in vertices:
-            ax.plot(v[0], v[1], 'ko', markersize=8)
+    if len(vertices) >= 3:
+        poly = Polygon(vertices, alpha=0.3, facecolor='yellow', 
+                     edgecolor='black', linewidth=2, label='Región Factible')
+        ax.add_patch(poly)
+    
+    # Marcar vértices
+    for v in vertices:
+        ax.plot(v[0], v[1], 'ko', markersize=8)
     
     # Marcar punto óptimo
     if solucion is not None:
@@ -227,9 +257,9 @@ def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricci
             ax.plot(x, y_obj, 'r--', linewidth=2, alpha=0.7,
                    label=f'Z = {formatear_numero(c1, 1)}x₁ + {formatear_numero(c2, 1)}x₂ = {formatear_numero(Z_opt)}')
     
-    # Configuración de ejes
-    ax.set_xlim(0, x_max)
-    ax.set_ylim(0, y_max)
+    # Configuración de ejes con límites centrados
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
     ax.set_xlabel('x₁', fontsize=12, fontweight='bold')
     ax.set_ylabel('x₂', fontsize=12, fontweight='bold')
     ax.set_title(f'Solución Gráfica - Programación Lineal\n{tipo.upper()}IMIZAR Z = {formatear_numero(c[0], 1)}x₁ + {formatear_numero(c[1], 1)}x₂',
