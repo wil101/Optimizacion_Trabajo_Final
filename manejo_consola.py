@@ -13,6 +13,7 @@ from utilidades import (
     validar_opcion,
     mostrar_titulo
 )
+from ejemplos_casos_prueba import generar_problema_complejo
 
 
 # ==================================================================================
@@ -87,14 +88,13 @@ def ingresar_restriccion(numero, num_vars):
         num_vars: Número de variables
     
     Returns:
-        tuple: (coeficientes, valor) o None si hay error
+        tuple: (coeficientes, valor, tipo_restriccion) o None si hay error
     """
     while True:
         try:
             rest_str = input(f"Restricción {numero}: ")
             partes = rest_str.split()
             
-            # Buscar el tipo de desigualdad
             tipo_idx = -1
             tipo_rest = None
             for idx, parte in enumerate(partes):
@@ -104,28 +104,20 @@ def ingresar_restriccion(numero, num_vars):
                     break
             
             if tipo_idx == -1:
-                print("⚠️  Debe incluir <=, >= o =")
+                print("⚠️  Debe incluir un tipo de restricción: <=, >= o =")
                 continue
             
             coef = [float(x) for x in partes[:tipo_idx]]
             valor = float(partes[tipo_idx + 1])
             
             if len(coef) != num_vars:
-                print(f"⚠️  Debe ingresar {num_vars} coeficientes")
+                print(f"⚠️  Debe ingresar {num_vars} coeficientes para las variables.")
                 continue
             
-            # Convertir según tipo de restricción
-            if tipo_rest == '<=':
-                return coef, valor
-            elif tipo_rest == '>=':
-                # Multiplicar por -1 para convertir a <=
-                return [-c for c in coef], -valor
-            else:  # =
-                print("⚠️  Nota: restricciones de igualdad se tratan como ≤ en esta versión")
-                return coef, valor
+            return coef, valor, tipo_rest
                 
         except (ValueError, IndexError):
-            print("⚠️  Formato inválido. Intente nuevamente")
+            print("⚠️  Formato inválido. Ejemplo: '2 3 <= 10'. Intente nuevamente.")
 
 
 def ingresar_problema_completo():
@@ -138,30 +130,24 @@ def ingresar_problema_completo():
     try:
         mostrar_titulo("INGRESO MANUAL DE PROBLEMA DE PROGRAMACIÓN LINEAL")
         
-        # Tipo de optimización
         tipo = ingresar_tipo_optimizacion()
-        
-        # Número de variables
         num_vars, nombres_vars = ingresar_numero_variables()
-        
-        # Coeficientes de función objetivo
         c = ingresar_coeficientes_objetivo(num_vars, nombres_vars)
-        
-        # Número de restricciones
         num_rest = ingresar_numero_restricciones()
         
-        # Ingresar restricciones
         print(f"\nIngrese cada restricción en formato: coeficientes tipo valor")
         print(f"Ejemplo para 2x₁ + 3x₂ ≤ 10: ingrese '2 3 <= 10'")
         print(f"Tipos permitidos: <= (menor o igual), >= (mayor o igual), = (igual)\n")
         
         A_list = []
         b_list = []
+        tipos_rest_list = []
         
         for i in range(num_rest):
-            coef, valor = ingresar_restriccion(i+1, num_vars)
+            coef, valor, tipo_rest = ingresar_restriccion(i+1, num_vars)
             A_list.append(coef)
             b_list.append(valor)
+            tipos_rest_list.append(tipo_rest)
         
         A = np.array(A_list)
         b = np.array(b_list)
@@ -173,6 +159,7 @@ def ingresar_problema_completo():
             'c': c,
             'A': A,
             'b': b,
+            'tipos_restricciones': tipos_rest_list,
             'num_vars': num_vars,
             'num_restricciones': num_rest,
             'nombres_vars': nombres_vars
@@ -212,7 +199,8 @@ def generar_problema_ejemplo_2d():
         'b': np.array([4.0, 12.0, 18.0]),
         'num_vars': 2,
         'num_restricciones': 3,
-        'nombres_vars': ['x1', 'x2']
+        'nombres_vars': ['x1', 'x2'],
+        'tipos_restricciones': ['<=', '<=', '<=']
     }
 
 
@@ -241,7 +229,8 @@ def generar_problema_ejemplo_3d():
         'b': np.array([10.0, 12.0, 14.0]),
         'num_vars': 3,
         'num_restricciones': 3,
-        'nombres_vars': ['x1', 'x2', 'x3']
+        'nombres_vars': ['x1', 'x2', 'x3'],
+        'tipos_restricciones': ['<=', '<=', '<=']
     }
 
 
@@ -254,12 +243,12 @@ def mostrar_menu_principal():
     Muestra el menú principal y retorna la opción seleccionada.
     
     Returns:
-        str: Opción seleccionada ('1', '2', o '3')
+        str: Opción seleccionada ('1', '2', '3', '4', o '5')
     """
     print("\n")
     print("="*80)
     print(" "*20 + "SOLUCIONADOR DE PROGRAMACIÓN LINEAL")
-    print(" "*25 + "Método Simplex Revisado")
+    print(" "*25 + "Método Simplex Revisado & Gran M")
     print("="*80)
     print("\n  Desarrollado para resolver problemas de PL paso a paso")
     print("  Muestra cada iteración del tablero simplex y solución gráfica (2D)\n")
@@ -267,10 +256,35 @@ def mostrar_menu_principal():
     
     print("\n📝 OPCIONES DE INGRESO:")
     print("  1. Ingresar problema manualmente")
-    print("  2. Usar problema de ejemplo (2 o 3 variables aleatorio)")
-    print("  3. Salir")
+    print("  2. Usar problema de ejemplo (2 variables)")
+    print("  3. Usar problema complejo (con restricciones mixtas)")
+    print("  4. Usar problema desde el código (Casos de prueba)")
+    print("  5. Salir")
     
-    return validar_opcion(['1', '2', '3'])
+    return validar_opcion(['1', '2', '3', '4', '5'])
+
+
+def mostrar_menu_problemas_definidos():
+    """
+    Muestra el submenú para elegir un problema predefinido.
+    
+    Returns:
+        str: Opción seleccionada ('1' a '8')
+    """
+    print("\n")
+    mostrar_titulo("SELECCIONAR PROBLEMA DESDE CÓDIGO")
+    print("\n📂 Elija un caso de prueba predefinido:")
+    print("  1. Problema Personalizado (Modificable en el código)")
+    print("  2. Prueba de Método de Dos Fases (Minimizar, >=, =)")
+    print("  3. Prueba de Gráfico con Números Grandes")
+    print("  4. Prueba con Múltiples Variables (5 variables)")
+    print("  --- Casos Especiales ---")
+    print("  5. Prueba de Problema Infactible")
+    print("  6. Prueba de Solución No Acotada")
+    print("  7. Prueba de Múltiples Soluciones Óptimas")
+    print("  8. Volver al menú principal")
+    
+    return validar_opcion(['1', '2', '3', '4', '5', '6', '7', '8'])
 
 
 def confirmar_accion(mensaje):

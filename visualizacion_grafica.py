@@ -143,7 +143,7 @@ def ordenar_vertices(vertices):
 # GRAFICACIÓN
 # ==================================================================================
 
-def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricciones):
+def graficar_solucion_2d(A, b, c, soluciones_optimas, valor, tipo, num_vars, num_restricciones):
     """
     Grafica la solución para problemas de 2 variables.
     
@@ -151,7 +151,7 @@ def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricci
         A: Matriz de restricciones
         b: Vector de lado derecho
         c: Vector de coeficientes de función objetivo
-        solucion: Vector solución óptima
+        soluciones_optimas: Lista de vectores de solución óptima
         valor: Valor óptimo de Z
         tipo: 'max' o 'min'
         num_vars: Número de variables
@@ -161,7 +161,7 @@ def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricci
         print("\n⚠️  El método gráfico solo está disponible para problemas de 2 variables")
         return
     
-    if solucion is None:
+    if not soluciones_optimas:
         print("\n⚠️  No hay solución óptima para graficar")
         return
     
@@ -178,10 +178,10 @@ def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricci
         x_coords = [v[0] for v in vertices]
         y_coords = [v[1] for v in vertices]
         
-        # Incluir solución óptima en el cálculo
-        if solucion is not None:
-            x_coords.append(solucion[0])
-            y_coords.append(solucion[1])
+        # Incluir todas las soluciones óptimas en el cálculo
+        for sol in soluciones_optimas:
+            x_coords.append(sol[0])
+            y_coords.append(sol[1])
         
         x_min_data = min(x_coords)
         x_max_data = max(x_coords)
@@ -242,20 +242,30 @@ def graficar_solucion_2d(A, b, c, solucion, valor, tipo, num_vars, num_restricci
     for v in vertices:
         ax.plot(v[0], v[1], 'ko', markersize=8)
     
-    # Marcar punto óptimo
-    if solucion is not None:
-        ax.plot(solucion[0], solucion[1], 'r*', markersize=20, 
-               label=f'Óptimo ({formatear_numero(solucion[0])}, {formatear_numero(solucion[1])})',
-               zorder=5)
-        
-        # Línea de nivel de la función objetivo
+    # Marcar puntos/línea de solución óptima
+    if soluciones_optimas:
+        # Si hay múltiples soluciones, dibujar la línea que las une
+        if len(soluciones_optimas) > 1:
+            # Ordenar puntos para dibujar la línea correctamente
+            x_opts = [s[0] for s in soluciones_optimas]
+            y_opts = [s[1] for s in soluciones_optimas]
+            ax.plot(x_opts, y_opts, 'c-', linewidth=5, alpha=0.8,
+                    label='Línea de Soluciones Óptimas', zorder=6)
+
+        # Marcar cada vértice óptimo con una estrella
+        for i, sol in enumerate(soluciones_optimas):
+            label = f'Óptimo ({formatear_numero(sol[0])}, {formatear_numero(sol[1])})' if i == 0 else None
+            ax.plot(sol[0], sol[1], 'r*', markersize=20, label=label, zorder=7)
+
+        # Línea de nivel de la función objetivo (pasa por todas las soluciones óptimas)
         c1, c2 = c[:2]
         Z_opt = valor
         
         if abs(c2) > 1e-9:
             y_obj = (Z_opt - c1 * x) / c2
+            # El label de la línea Z es ahora más genérico
             ax.plot(x, y_obj, 'r--', linewidth=2, alpha=0.7,
-                   label=f'Z = {formatear_numero(c1, 1)}x₁ + {formatear_numero(c2, 1)}x₂ = {formatear_numero(Z_opt)}')
+                   label=f'Línea Z = {formatear_numero(Z_opt)}')
     
     # Configuración de ejes con límites centrados
     ax.set_xlim(x_min, x_max)

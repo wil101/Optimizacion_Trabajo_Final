@@ -91,21 +91,43 @@ def formatear_matriz(matriz, decimales=2):
     return "[\n" + "\n".join(filas) + "\n]"
 
 
-def obtener_nombre_variable(idx, n_decision):
+def obtener_nombre_variable(idx, n_decision, holgura_indices=None, exceso_indices=None, artificial_indices=None):
     """
     Retorna el nombre de una variable según su índice.
     
     Args:
         idx: Índice de la variable
         n_decision: Número de variables de decisión
+        holgura_indices: Lista de índices de variables de holgura
+        exceso_indices: Lista de índices de variables de exceso
+        artificial_indices: Lista de índices de variables artificiales
     
     Returns:
-        str: Nombre de la variable (x1, x2, s1, s2, etc.)
+        str: Nombre de la variable (x1, s1, e1, a1, etc.)
     """
+    holgura_indices = holgura_indices or []
+    exceso_indices = exceso_indices or []
+    artificial_indices = artificial_indices or []
+
     if idx < n_decision:
-        return f"x{idx+1}"
-    else:
-        return f"s{idx - n_decision + 1}"
+        return f"x{idx + 1}"
+    
+    try:
+        if idx in holgura_indices:
+            return f"s{holgura_indices.index(idx) + 1}"
+        if idx in exceso_indices:
+            return f"e{exceso_indices.index(idx) + 1}"
+        if idx in artificial_indices:
+            return f"a{artificial_indices.index(idx) + 1}"
+    except ValueError:
+        # Esto no debería ocurrir si los índices están bien gestionados
+        pass
+
+    # Fallback para el caso simple o si no se encuentran los índices
+    if idx >= n_decision and not (exceso_indices or artificial_indices):
+         return f"s{idx - n_decision + 1}"
+
+    return f"var{idx}"
 
 
 # ==================================================================================

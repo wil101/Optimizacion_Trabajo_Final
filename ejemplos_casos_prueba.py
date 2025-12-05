@@ -6,6 +6,43 @@ Este archivo contiene ejemplos de problemas de PL que puedes usar para probar
 la aplicación. Incluye la entrada que debes proporcionar y la solución esperada.
 ==================================================================================
 """
+import numpy as np
+
+# ==============================================================================
+# CASO COMPLEJO (MINIMIZACIÓN CON RESTRICCIONES MIXTAS)
+# ==============================================================================
+def generar_problema_complejo():
+    """
+    Genera el problema complejo con restricciones mixtas.
+    Minimizar Z = 0.4x1 + 0.5x2
+    S.A.
+    0.3x1 + 0.1x2 <= 2.7
+    0.5x1 + 0.5x2 = 6
+    0.6x1 + 0.4x2 >= 6
+    """
+    print("\nCargando problema complejo:")
+    print("Función Objetivo: Minimizar Z = 0.4x₁ + 0.5x₂")
+    print("\nRestricciones:")
+    print("  0.3x₁ + 0.1x₂ ≤ 2.7")
+    print("  0.5x₁ + 0.5x₂ = 6")
+    print("  0.6x₁ + 0.4x₂ ≥ 6")
+    print("  x₁, x₂ ≥ 0")
+    
+    return {
+        'tipo': 'min',
+        'c': np.array([0.4, 0.5]),
+        'A': np.array([
+            [0.3, 0.1],
+            [0.5, 0.5],
+            [0.6, 0.4]
+        ]),
+        'b': np.array([2.7, 6, 6]),
+        'tipos_restricciones': ['<=', '=', '>='],
+        'num_vars': 2,
+        'num_restricciones': 3,
+        'nombres_vars': ['x1', 'x2']
+    }
+
 
 # ==============================================================================
 # CASO 1: Problema Clásico 2D - FACTIBLE Y ACOTADO
